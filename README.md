@@ -8,4 +8,4 @@ Lora and GPS Arduino Uno Shield
 
 *PROJECT IN PROGRESS*
 
-Documents to follow up soon...
+*Documents to follow up soon...*
