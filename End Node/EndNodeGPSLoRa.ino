@@ -1,30 +1,3 @@
-/*
-In this project,we'll show how to get GPS data from a remote Arduino via Wireless LoRa Protocol 
-and show the track on the GPSWOX.com.
-Hardware Set up
-1 Client Side: Arduino + LoRa/GPS Shield (868Mhz).
-    In the client side, we will use the hardware serial to print out debug data in PC and use software
-    serial to get GPS data. 
-    1/ Arduino UNO + LoRa GPS Shield . if use other Arduino board, please check the softserial connection and modify the code
-    2/ Wire GPS_RXD to Arduino D3
-    3/ Wire GPS_TXD to Arduino D4
-    4/ Remove jumper in GPS_RXD/GPX_TXD 1x3 pin header
-    a photo for hardware configuration is here: http://wiki.dragino.com/index.php?title=File:Uno_gps_softwareserial.png  
-  
-2 Gateway Side: LG01(868Mhz)
-External Library Require:
-  TinyGPS:  http://arduiniana.org/libraries/tinygps/
-  RadioHead Library: https://github.com/dragino/RadioHead 
-Client side will get GPS data and keep sending out to the gateway via LoRa wireless. Gateway side 
-will listen on the LoRa wireless frequency, when it get the GPS data, the gateway will send it to 
-the GPSWOX tracking server
- 
-Note: Press the "RST" button when you upload the sketch.
-modified 09 6 2016
-by Dragino Tech<support@dragino.com>
-Dragino Technology Co., Limited
-*/
-
 #include <SoftwareSerial.h>
 #include <TinyGPS.h>
 #include <SPI.h>
