@@ -36,7 +36,7 @@
 #include <SoftwareSerial.h>
 
 TinyGPS gps;
-SoftwareSerial ss(4, 3); // Arduino RX, TX to conenct
+SoftwareSerial ss(3, 4); // Arduino RX, TX to conenct
 
 static void smartdelay(unsigned long ms);
 unsigned int count = 0;        //For times count
@@ -50,15 +50,14 @@ static uint8_t mydata[11] ={0x03,0x88,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x
 // LoRaWAN NwkSKey, network session key
 // This is the default Semtech key, which is used by the early prototype TTN
 // network.
-static const PROGMEM u1_t NWKSKEY[16] ={ 0x4D, 0x8A, 0x2D, 0x17, 0x3F, 0x62, 0x4B, 0xA8, 0xA6, 0x4F, 0x86, 0x3D, 0x89, 0xD4, 0xE9, 0x43 };
+static const PROGMEM u1_t NWKSKEY[16] ={ 0x78, 0x83, 0x11, 0xBD, 0xDF, 0xF3, 0x02, 0x71, 0x71, 0xED, 0x1A, 0xA5, 0x06, 0xA6, 0xC8, 0x24 };
 
 // LoRaWAN AppSKey, application session key
 // This is the default Semtech key, which is used by the early prototype TTN
 // network.
-static const u1_t PROGMEM APPSKEY[16] ={ 0xD4, 0x84, 0xE1, 0xD6, 0x4A, 0x87, 0x85, 0xE3, 0x37, 0x45, 0x79, 0x45, 0x76, 0x14, 0x70, 0x9F };
-
+static const u1_t PROGMEM APPSKEY[16] ={ 0xAE, 0x6A, 0x55, 0x51, 0xD6, 0xC0, 0x80, 0x14, 0x4D, 0xAB, 0xDD, 0x96, 0x6E, 0xEA, 0xBE, 0xE6 };
 // LoRaWAN end-device address (DevAddr)
-static const u4_t DEVADDR = 0x260026DF; // <-- Change this address for every node!
+static const u4_t DEVADDR = 0x26001DC3; // <-- Change this address for every node!
 
 // These callbacks are only used in over-the-air activation, so they are
 // left empty here (we cannot leave them out completely unless
@@ -165,25 +164,7 @@ double transformLat(double x, double y)
     return ret;  
 }  
     
-void WGS2GCJTransform(float wgLon, float wgLat, float &mgLon, float &mgLat)  
-{  
-    const double a = 6378245.0;  
-    const double ee = 0.00669342162296594323;  
-  
-    double dLat = transformLat(wgLon - 105.0, wgLat - 35.0);  
-    double dLon = transformLon(wgLon - 105.0, wgLat - 35.0);  
-  
-    double radLat = wgLat / 180.0 * M_PI;  
-    double magic = sin(radLat);  
-    magic = 1 - ee * magic * magic;  
-  
-    double sqrtMagic = sqrt(magic);  
-    dLat = (dLat * 180.0) / ((a * (1 - ee)) / (magic * sqrtMagic) * M_PI);  
-    dLon = (dLon * 180.0) / (a / sqrtMagic * cos(radLat) * M_PI);  
-  
-    mgLat = wgLat + dLat;  
-    mgLon = wgLon + dLon;  
-}
+ 
 
 void GPSRead()
 {
@@ -193,19 +174,9 @@ void GPSRead()
   flon == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flon, 6;//save six decimal places 
   flat == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : flat, 6;
   falt == TinyGPS::GPS_INVALID_F_ANGLE ? 0.0 : falt, 2;//save two decimal places
-  if((flon < 72.004 || flon > 137.8347)&&(flat < 0.8293 || flat >55.8271))  //out of China
-  {
     longitude=flon;
     latitude=flat;
   // Serial.println("Out of China");
-  }
-  else
-  {
-    WGS2GCJTransform(flon,flat,mgLon,mgLat);
-    longitude=mgLon;
-    latitude=mgLat;
-   //Serial.println("In China");
-  }
   int32_t lat = latitude * 10000;
   int32_t lon = longitude * 10000;
   int32_t alt = falt * 100;
@@ -304,30 +275,8 @@ void setup() {
     LMIC_setSession (0x1, DEVADDR, NWKSKEY, APPSKEY);
     #endif
 
-    #if defined(CFG_eu868)
-    // Set up the channels used by the Things Network, which corresponds
-    // to the defaults of most gateways. Without this, only three base
-    // channels from the LoRaWAN specification are used, which certainly
-    // works, so it is good for debugging, but can overload those
-    // frequencies, so be sure to configure the full frequency range of
-    // your network here (unless your network autoconfigures them).
-    // Setting up channels should happen after LMIC_setSession, as that
-    // configures the minimal channel set.
-    // NA-US channels 0-71 are configured automatically
-    LMIC_setupChannel(0, 868100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(1, 868300000, DR_RANGE_MAP(DR_SF12, DR_SF7B), BAND_CENTI);      // g-band
-    LMIC_setupChannel(2, 868500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(3, 867100000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(4, 867300000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(5, 867500000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(6, 867700000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(7, 867900000, DR_RANGE_MAP(DR_SF12, DR_SF7),  BAND_CENTI);      // g-band
-    LMIC_setupChannel(8, 868800000, DR_RANGE_MAP(DR_FSK,  DR_FSK),  BAND_MILLI);      // g2-band
-    // TTN defines an additional channel at 869.525Mhz using SF9 for class B
-    // devices' ping slots. LMIC does not have an easy way to define set this
-    // frequency and support for class B is spotty and untested, so this
-    // frequency is not configured here.
-    #elif defined(CFG_us915)
+   
+    #if defined(CFG_us915)
     // NA-US channels 0-71 are configured automatically
     // but only one group of 8 should (a subband) should be active
     // TTN recommends the second sub band, 1 in a zero based count.
